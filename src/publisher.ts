@@ -1,13 +1,22 @@
-if (process.env.NODE_ENV !== 'production') {
-  require('dotenv').config();
-}
+import { EventHubProducerClient } from '@azure/event-hubs';
+import { DefaultAzureCredential } from '@azure/identity';
 
-const { EventHubProducerClient } = require('@azure/event-hubs');
-const { DefaultAzureCredential } = require('@azure/identity');
+require('dotenv').config();
 
 // Event hubs
 // This variable refers to the name of the Azure resource
 // that the Event Hub belongs to.
+if (!process.env.EVENT_HUBS_RESOURCE_NAME)
+  throw new Error(
+    'EVENT_HUBS_RESOURCE_NAME is not defined in the environment variables.'
+  );
+if (!process.env.EVENT_HUB_NAME)
+  throw new Error(
+    'EVENT_HUB_NAME is not defined in the environment variables.'
+  );
+
+console.clear();
+
 const eventHubsResourceName = process.env.EVENT_HUBS_RESOURCE_NAME;
 const fullyQualifiedNamespace = `${eventHubsResourceName}.servicebus.windows.net`;
 // eventHubName: This variable refers to the name of the
