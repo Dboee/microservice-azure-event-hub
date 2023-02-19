@@ -36,15 +36,19 @@ async function main() {
 
   // Prepare a batch of three events.
   const batch = await producer.createBatch();
-  batch.tryAdd({ body: 'passwordless First event' });
-  batch.tryAdd({ body: 'passwordless Second event' });
-  batch.tryAdd({ body: 'passwordless Third event' });
+  batch.tryAdd({
+    body: {
+      id: '123',
+      title: 'concert',
+      price: 20,
+    },
+  });
 
   // Send the batch to the event hub.
   await producer.sendBatch(batch);
 
   // Close the producer client.
-  await producer.close();
+  // await producer.close();
 
   console.log('A batch of three events have been sent to the event hub');
 }
