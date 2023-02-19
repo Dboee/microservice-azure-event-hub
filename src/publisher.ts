@@ -15,8 +15,6 @@ if (!process.env.EVENT_HUB_NAME)
     'EVENT_HUB_NAME is not defined in the environment variables.'
   );
 
-console.clear();
-
 const eventHubsResourceName = process.env.EVENT_HUBS_RESOURCE_NAME;
 const fullyQualifiedNamespace = `${eventHubsResourceName}.servicebus.windows.net`;
 // eventHubName: This variable refers to the name of the
@@ -27,6 +25,7 @@ const eventHubName = process.env.EVENT_HUB_NAME;
 const credential = new DefaultAzureCredential();
 
 async function main() {
+  console.clear();
   // Create a producer client to send messages to the event hub.
   const producer = new EventHubProducerClient(
     fullyQualifiedNamespace,
@@ -42,6 +41,9 @@ async function main() {
       title: 'concert',
       price: 20,
     },
+    properties: {
+      subject: 'ticket:created',
+    },
   });
 
   // Send the batch to the event hub.
@@ -50,7 +52,7 @@ async function main() {
   // Close the producer client.
   // await producer.close();
 
-  console.log('A batch of three events have been sent to the event hub');
+  console.log('Sent a batch of messages to the event hub');
 }
 
 main().catch((err) => {
