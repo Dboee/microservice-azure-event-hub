@@ -5,47 +5,50 @@ import {
   EventData,
   ReceivedEventData,
   PartitionContext,
-  PartitionProperties,
 } from '@azure/event-hubs';
 import { ContainerClient } from '@azure/storage-blob';
 import { BlobCheckpointStore } from '@azure/eventhubs-checkpointstore-blob';
 
+import { Subjects } from './subjects';
+
 require('dotenv').config();
+
+interface Event {
+  data: any;
+  subject: Subjects;
+  consumerGroup: Subjects;
+  // properties: {
+  // };
+}
 
 // An abstract class in TypeScript is a class that cannot be
 // instantiated directly. It can only be used as a base class for other classes.
-
-abstract class Listener {
+abstract class Listener<T extends Event> {
   // These properties must be defined in the child class
-  abstract consumerGroup: string;
+  abstract subject: T['subject'];
   abstract onMessage(
-    data: any,
+    data: T['data'],
     context: PartitionContext,
     event: ReceivedEventData
   ): void;
-
-  // abstract partition: string;
+  // Azure specific properties
+  abstract eventHubName: string; // Azure Event Hub name
+  abstract consumerGroup: T['consumerGroup']; // Azure Event Hub consumer group
 
   // These properties are defined here
-  private eventHubName: string;
   private baseUrl: string;
   private credential: DefaultAzureCredential;
   private checkpointStore: BlobCheckpointStore;
-  protected consumerClient?: EventHubConsumerClient;
-  // sets up subject
-  // protected subject: string;
+  private consumerClient: EventHubConsumerClient;
 
   // The constructor is called when the class is instantiated
-  constructor() {
+  constructor(eventHubName: string, consumerGroup: T['consumerGroup']) {
     console.clear();
+
     // Checks variables from the environment
     if (!process.env.EVENT_HUBS_RESOURCE_NAME)
       throw new Error(
         'EVENT_HUBS_RESOURCE_NAME is not defined in the environment variables.'
-      );
-    if (!process.env.EVENT_HUB_NAME)
-      throw new Error(
-        'EVENT_HUB_NAME is not defined in the environment variables.'
       );
     if (!process.env.STORAGE_ACCOUNT_NAME)
       throw new Error(
@@ -56,7 +59,6 @@ abstract class Listener {
         'STORAGE_CONTAINER_NAME is not defined in the environment variables.'
       );
     // Initialize the properties when the class is instantiated
-    this.eventHubName = process.env.EVENT_HUB_NAME;
     this.baseUrl = `https://${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
     this.credential = new DefaultAzureCredential();
     this.checkpointStore = new BlobCheckpointStore(
@@ -65,15 +67,18 @@ abstract class Listener {
         this.credential
       )
     );
-    // this.subject = this.setSubject(event);
+    this.consumerClient = this.setConsumerClient(eventHubName, consumerGroup);
   }
   // protected member is accessible from the class
   // itself and its subclasses but not from the outside world
-  protected setConsumerClient() {
+  protected setConsumerClient(
+    eventHubName: string,
+    consumerGroup: T['consumerGroup']
+  ) {
     return new EventHubConsumerClient(
-      this.consumerGroup,
+      consumerGroup,
       `${process.env.EVENT_HUBS_RESOURCE_NAME}.servicebus.windows.net`,
-      this.eventHubName,
+      eventHubName,
       this.credential,
       this.checkpointStore
       // configures the client to receive events from a specific partition
@@ -83,16 +88,8 @@ abstract class Listener {
 
   // Method to parse the event data into a JSON object
   parseMessage(event: EventData) {
-    const data = event;
+    const data = event.body;
     return data;
-  }
-
-  setEventType(event: EventData) {
-    if (!event.properties) throw new Error('No property in event');
-    if (!event.properties.subject)
-      throw new Error('No subject property in event');
-    console.log('event: ', event.properties!.eventType);
-    return event.properties.subject;
   }
 
   // Define a method that can be called to start the listener
@@ -105,7 +102,6 @@ abstract class Listener {
 
           for (const event of events) {
             const parsedData = this.parseMessage(event);
-            this.setEventType(event);
             this.onMessage(parsedData, context, event);
           }
 

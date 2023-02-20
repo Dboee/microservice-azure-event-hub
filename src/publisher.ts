@@ -1,5 +1,7 @@
-import { EventHubProducerClient } from '@azure/event-hubs';
+import { EventData, EventHubProducerClient } from '@azure/event-hubs';
 import { DefaultAzureCredential } from '@azure/identity';
+
+import { Subjects } from './events/subjects';
 
 require('dotenv').config();
 
@@ -33,26 +35,31 @@ async function main() {
     credential
   );
 
-  // Prepare a batch of three events.
   const batch = await producer.createBatch();
-  batch.tryAdd({
+  const message: EventData = {
     body: {
       id: '123',
       title: 'concert',
       price: 20,
     },
     properties: {
-      subject: 'ticket:created',
+      subject: Subjects.TicketCreated,
+      consumerGroup: Subjects.TicketCreated,
     },
-  });
+  };
 
-  // Send the batch to the event hub.
+  batch.tryAdd(message);
+
+  if (!message.properties) throw new Error('No property in event');
+  if (!message.properties.subject)
+    throw new Error('No subject property in event');
+
   await producer.sendBatch(batch);
 
   // Close the producer client.
-  // await producer.close();
+  await producer.close();
 
-  console.log('Sent a batch of messages to the event hub');
+  console.log(`Sent a batch as ${message.properties.subject} to the event hub`);
 }
 
 main().catch((err) => {
