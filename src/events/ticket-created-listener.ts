@@ -43,7 +43,14 @@ class TicketCreatedListener extends Listener<ITicketCreatedEvent> {
     msg: ReceivedEventData
   ) {
     // Do something with the event data
-    console.log(data.id, data.title, data.price);
+    console.log(
+      'event #',
+      msg.sequenceNumber,
+      ' - ',
+      data.title,
+      ' - $',
+      data.price
+    );
 
     // console.log('context: ', context);
     // console.log('msg: ', msg);
