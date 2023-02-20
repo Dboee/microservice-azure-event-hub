@@ -40,7 +40,7 @@ abstract class Listener<T extends Event> {
   private baseUrl: string;
   private credential: DefaultAzureCredential;
   private checkpointStore: BlobCheckpointStore;
-  private consumerClient: EventHubConsumerClient;
+  private client: EventHubConsumerClient;
 
   // The constructor is called when the class is instantiated
   constructor(eventHubName: EventHubs, consumerGroup: T['consumerGroup']) {
@@ -68,7 +68,7 @@ abstract class Listener<T extends Event> {
         this.credential
       )
     );
-    this.consumerClient = this.setConsumerClient(eventHubName, consumerGroup);
+    this.client = this.setConsumerClient(eventHubName, consumerGroup);
   }
   // protected member is accessible from the class
   // itself and its subclasses but not from the outside world
@@ -96,7 +96,7 @@ abstract class Listener<T extends Event> {
   // Define a method that can be called to start the listener
   async listen() {
     console.log('Listener conntected to Azure Event Hub');
-    const subscription = this.consumerClient!.subscribe(
+    const subscription = this.client!.subscribe(
       {
         processEvents: async (events, context) => {
           if (events.length === 0) return console.log('No events to process.');
