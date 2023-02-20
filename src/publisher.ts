@@ -1,7 +1,8 @@
 import { EventData, EventHubProducerClient } from '@azure/event-hubs';
 import { DefaultAzureCredential } from '@azure/identity';
 
-import { Subjects } from './events/subjects';
+import { ConsumerGroups } from './events/consumer-groups';
+import { EventHubs } from './events/event-hubs';
 
 require('dotenv').config();
 
@@ -21,7 +22,7 @@ const eventHubsResourceName = process.env.EVENT_HUBS_RESOURCE_NAME;
 const fullyQualifiedNamespace = `${eventHubsResourceName}.servicebus.windows.net`;
 // eventHubName: This variable refers to the name of the
 // specific Event Hub within the resource.
-const eventHubName = process.env.EVENT_HUB_NAME;
+const eventHubName: EventHubs = EventHubs.Tickets;
 
 // Azure Identity - passwordless authentication
 const credential = new DefaultAzureCredential();
@@ -43,8 +44,8 @@ async function main() {
       price: 20,
     },
     properties: {
-      subject: Subjects.TicketCreated,
-      consumerGroup: Subjects.TicketCreated,
+      subject: ConsumerGroups.TicketCreated,
+      consumerGroup: ConsumerGroups.TicketCreated,
     },
   };
 

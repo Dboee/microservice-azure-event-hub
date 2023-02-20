@@ -9,14 +9,15 @@ import {
 import { ContainerClient } from '@azure/storage-blob';
 import { BlobCheckpointStore } from '@azure/eventhubs-checkpointstore-blob';
 
-import { Subjects } from './subjects';
+import { ConsumerGroups } from './consumer-groups';
+import { EventHubs } from './event-hubs';
 
 require('dotenv').config();
 
 interface Event {
   data: any;
-  subject: Subjects;
-  consumerGroup: Subjects;
+  subject: ConsumerGroups;
+  consumerGroup: ConsumerGroups;
   // properties: {
   // };
 }
@@ -32,7 +33,7 @@ abstract class Listener<T extends Event> {
     event: ReceivedEventData
   ): void;
   // Azure specific properties
-  abstract eventHubName: string; // Azure Event Hub name
+  abstract eventHubName: EventHubs; // Azure Event Hub name
   abstract consumerGroup: T['consumerGroup']; // Azure Event Hub consumer group
 
   // These properties are defined here
@@ -42,7 +43,7 @@ abstract class Listener<T extends Event> {
   private consumerClient: EventHubConsumerClient;
 
   // The constructor is called when the class is instantiated
-  constructor(eventHubName: string, consumerGroup: T['consumerGroup']) {
+  constructor(eventHubName: EventHubs, consumerGroup: T['consumerGroup']) {
     console.clear();
 
     // Checks variables from the environment
@@ -72,7 +73,7 @@ abstract class Listener<T extends Event> {
   // protected member is accessible from the class
   // itself and its subclasses but not from the outside world
   protected setConsumerClient(
-    eventHubName: string,
+    eventHubName: EventHubs,
     consumerGroup: T['consumerGroup']
   ) {
     return new EventHubConsumerClient(

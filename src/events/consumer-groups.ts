@@ -1,8 +1,4 @@
-// Event Hub (Azure Event Hubs) / Subject (NATS):
-// A stream of events, which can be hierarchical in NATS,
-// and defines the topic of the message.
-
-export enum Subjects {
+export enum ConsumerGroups {
   TicketCreated = 'ticket-created',
   TicketUpdated = 'ticket-updated',
   OrderCreated = 'order-created',
