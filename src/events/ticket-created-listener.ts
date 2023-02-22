@@ -9,11 +9,6 @@ import { ITicketCreatedEvent } from './ticket-created-event';
 import { ConsumerGroups } from './consumer-groups';
 import { EventHubs } from './event-hubs';
 
-// const getPartitionIds = async (client: EventHubConsumerClient) => {
-//   const partitionIds = await client.getPartitionIds();
-//   console.log('Available partitions:', partitionIds);
-// };
-
 class TicketCreatedListener extends Listener<ITicketCreatedEvent> {
   eventHubName: EventHubs;
 
@@ -22,11 +17,6 @@ class TicketCreatedListener extends Listener<ITicketCreatedEvent> {
   readonly subject = ConsumerGroups.TicketCreated;
 
   constructor() {
-    // Checks event hub name variable from the environment
-    if (!process.env.EVENT_HUB_NAME)
-      throw new Error(
-        'EVENT_HUB_NAME is not defined in the environment variables.'
-      );
     // Azure specific properties
     const eventHubName: EventHubs = EventHubs.Tickets;
     const consumerGroup = ConsumerGroups.TicketCreated;

@@ -4,11 +4,7 @@ import { DefaultAzureCredential } from '@azure/identity';
 import { ConsumerGroups } from './consumer-groups';
 import { EventHubs } from './event-hubs';
 
-require('dotenv').config();
-
-// Event hubs
-// This variable refers to the name of the Azure resource
-// that the Event Hub belongs to.
+const EVENT_HUBS_RESOURCE_NAME = 'microservice-namespace';
 
 interface Event {
   consumerGroup: ConsumerGroups;
@@ -28,11 +24,7 @@ export abstract class Publisher<T extends Event> {
 
   constructor(eventHubName: EventHubs, consumerGroup: T['consumerGroup']) {
     // Client Setup
-    if (!process.env.EVENT_HUBS_RESOURCE_NAME)
-      throw new Error(
-        'EVENT_HUBS_RESOURCE_NAME is not defined in the environment variables.'
-      );
-    this.eventHubsResourceName = process.env.EVENT_HUBS_RESOURCE_NAME;
+    this.eventHubsResourceName = EVENT_HUBS_RESOURCE_NAME;
     this.fullyQualifiedNamespace = `${this.eventHubsResourceName}.servicebus.windows.net`;
     this.credential = new DefaultAzureCredential();
 

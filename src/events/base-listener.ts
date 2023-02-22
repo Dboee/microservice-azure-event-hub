@@ -12,7 +12,9 @@ import { BlobCheckpointStore } from '@azure/eventhubs-checkpointstore-blob';
 import { ConsumerGroups } from './consumer-groups';
 import { EventHubs } from './event-hubs';
 
-require('dotenv').config();
+const EVENT_HUBS_RESOURCE_NAME = 'microservice-namespace';
+const STORAGE_ACCOUNT_NAME = 'microservicestorageacc';
+const STORAGE_CONTAINER_NAME = 'eventhub-container';
 
 interface Event {
   data: any;
@@ -46,25 +48,12 @@ abstract class Listener<T extends Event> {
   constructor(eventHubName: EventHubs, consumerGroup: T['consumerGroup']) {
     console.clear();
 
-    // Checks variables from the environment
-    if (!process.env.EVENT_HUBS_RESOURCE_NAME)
-      throw new Error(
-        'EVENT_HUBS_RESOURCE_NAME is not defined in the environment variables.'
-      );
-    if (!process.env.STORAGE_ACCOUNT_NAME)
-      throw new Error(
-        'STORAGE_ACCOUNT_NAME is not defined in the environment variables.'
-      );
-    if (!process.env.STORAGE_CONTAINER_NAME)
-      throw new Error(
-        'STORAGE_CONTAINER_NAME is not defined in the environment variables.'
-      );
     // Initialize the properties when the class is instantiated
-    this.baseUrl = `https://${process.env.STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
+    this.baseUrl = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
     this.credential = new DefaultAzureCredential();
     this.checkpointStore = new BlobCheckpointStore(
       new ContainerClient(
-        `${this.baseUrl}/${process.env.STORAGE_CONTAINER_NAME}`,
+        `${this.baseUrl}/${STORAGE_CONTAINER_NAME}`,
         this.credential
       )
     );
@@ -78,7 +67,7 @@ abstract class Listener<T extends Event> {
   ) {
     return new EventHubConsumerClient(
       consumerGroup,
-      `${process.env.EVENT_HUBS_RESOURCE_NAME}.servicebus.windows.net`,
+      `${EVENT_HUBS_RESOURCE_NAME}.servicebus.windows.net`,
       eventHubName,
       this.credential,
       this.checkpointStore
