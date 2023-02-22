@@ -1,4 +1,7 @@
-import { DefaultAzureCredential } from '@azure/identity';
+// import {
+//   ChainedTokenCredential,
+//   DefaultAzureCredential,
+// } from '@azure/identity';
 import {
   EventHubConsumerClient,
   earliestEventPosition,
@@ -12,9 +15,8 @@ import { BlobCheckpointStore } from '@azure/eventhubs-checkpointstore-blob';
 import { ConsumerGroups } from './consumer-groups';
 import { EventHubs } from './event-hubs';
 
-const EVENT_HUBS_RESOURCE_NAME = 'microservice-namespace';
-const STORAGE_ACCOUNT_NAME = 'microservicestorageacc';
-const STORAGE_CONTAINER_NAME = 'eventhub-container';
+const EVENT_HUBS_NAMESPACE_CONNECTION_STRING = ''; // Get this from Azure Portal
+const STORAGE_NAMESPACE_CONNECTION_STRING = ''; // Get this from Azure Portal
 
 interface Event {
   data: any;
@@ -37,8 +39,10 @@ abstract class Listener<T extends Event> {
   abstract consumerGroup: T['consumerGroup']; // Azure Event Hub consumer group
 
   // These properties are defined here
-  private baseUrl: string;
-  private credential: DefaultAzureCredential;
+  private hubsCredentialString: string;
+  private storageCredentialString: string;
+  private containerName: string;
+  private containerClient: ContainerClient;
   private checkpointStore: BlobCheckpointStore;
   private client: EventHubConsumerClient;
 
@@ -46,15 +50,17 @@ abstract class Listener<T extends Event> {
   constructor(eventHubName: EventHubs, consumerGroup: T['consumerGroup']) {
     console.clear();
 
-    // Initialize the properties when the class is instantiated
-    this.baseUrl = `https://${STORAGE_ACCOUNT_NAME}.blob.core.windows.net`;
-    this.credential = new DefaultAzureCredential();
-    this.checkpointStore = new BlobCheckpointStore(
-      new ContainerClient(
-        `${this.baseUrl}/${STORAGE_CONTAINER_NAME}`,
-        this.credential
-      )
+    // Client Setup
+    this.hubsCredentialString = EVENT_HUBS_NAMESPACE_CONNECTION_STRING;
+    this.storageCredentialString = STORAGE_NAMESPACE_CONNECTION_STRING;
+    this.containerName = 'eventhub-container'; // Get this from Azure Portal
+
+    this.containerClient = new ContainerClient(
+      this.storageCredentialString,
+      this.containerName
     );
+    this.checkpointStore = new BlobCheckpointStore(this.containerClient);
+
     this.client = this.setConsumerClient(eventHubName, consumerGroup);
   }
 
@@ -66,12 +72,9 @@ abstract class Listener<T extends Event> {
   ) {
     return new EventHubConsumerClient(
       consumerGroup,
-      `${EVENT_HUBS_RESOURCE_NAME}.servicebus.windows.net`,
+      this.hubsCredentialString,
       eventHubName,
-      this.credential,
       this.checkpointStore
-      // configures the client to receive events from a specific partition
-      // { partitionId: this.partition }
     );
   }
 
