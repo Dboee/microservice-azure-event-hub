@@ -20,14 +20,12 @@ interface Event {
   data: any;
   subject: ConsumerGroups;
   consumerGroup: ConsumerGroups;
-  // properties: {
-  // };
 }
 
 // An abstract class in TypeScript is a class that cannot be
 // instantiated directly. It can only be used as a base class for other classes.
 abstract class Listener<T extends Event> {
-  // These properties must be defined in the child class
+  // These abstract properties must be defined in the child class
   abstract subject: T['subject'];
   abstract onMessage(
     data: T['data'],
@@ -59,9 +57,10 @@ abstract class Listener<T extends Event> {
     );
     this.client = this.setConsumerClient(eventHubName, consumerGroup);
   }
+
   // protected member is accessible from the class
   // itself and its subclasses but not from the outside world
-  protected setConsumerClient(
+  private setConsumerClient(
     eventHubName: EventHubs,
     consumerGroup: T['consumerGroup']
   ) {
